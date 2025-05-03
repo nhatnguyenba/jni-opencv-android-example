@@ -5,6 +5,10 @@ object NativeLib {
         System.loadLibrary("native-lib")
     }
 
-    external fun nativeFlip(inputImage: ByteArray, width: Int, height: Int): ByteArray
-    external fun nativeBlur(inputImage: ByteArray, width: Int, height: Int, blurSize: Int): ByteArray
+    // Blur
+    external fun nativeBlur(input: ByteArray, w: Int, h: Int, radius: Int): ByteArray
+
+    // Flip
+    external fun nativeFlipHorizontal(input: ByteArray, w: Int, h: Int): ByteArray
+    external fun nativeFlipVertical(input: ByteArray, w: Int, h: Int): ByteArray
 }

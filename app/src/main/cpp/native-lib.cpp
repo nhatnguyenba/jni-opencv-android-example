@@ -1,51 +1,70 @@
 #include <jni.h>
-#include <string>
 #include <opencv2/opencv.hpp>
-#include <vector>
+#include <android/bitmap.h>
 
-extern "C" JNIEXPORT jstring JNICALL
-Java_com_nhatnguyenba_opencv_MainActivity_stringFromJNI(
-        JNIEnv* env,
-        jobject /* this */) {
-    std::string hello = "Hello from C++";
-    return env->NewStringUTF(hello.c_str());
-}
+using namespace cv;
 
-// Chuyển mảng byte Android sang cv::Mat
-static cv::Mat byteArrayToMat(JNIEnv* env, jbyteArray arr, int width, int height) {
-    jbyte* data = env->GetByteArrayElements(arr, nullptr);
-    cv::Mat mat(height, width, CV_8UC4, reinterpret_cast<unsigned char*>(data));
-    cv::Mat matCopy = mat.clone();
-    env->ReleaseByteArrayElements(arr, data, JNI_ABORT);
-    return matCopy;
-}
+extern "C" {
 
-// Chuyển cv::Mat sang mảng byte để trả về Android
-static jbyteArray matToByteArray(JNIEnv* env, const cv::Mat& mat) {
-    int size = mat.total() * mat.elemSize();
-    jbyteArray arr = env->NewByteArray(size);
-    env->SetByteArrayRegion(arr, 0, size, reinterpret_cast<const jbyte*>(mat.data));
-    return arr;
-}
-
-extern "C"
 JNIEXPORT jbyteArray JNICALL
-Java_com_nhatnguyenba_opencv_NativeLib_nativeFlip(
-        JNIEnv* env, jobject , jbyteArray inputImage,
-        jint width, jint height) {
-    cv::Mat mat = byteArrayToMat(env, inputImage, width, height);
-    cv::Mat flipped;
-    cv::flip(mat, flipped, 1); // ngang
-    return matToByteArray(env, flipped);
+Java_com_nhatnguyenba_opencv_NativeLib_nativeFlipHorizontal(
+        JNIEnv *env,
+        jobject thiz,
+        jbyteArray input,
+        jint w,
+        jint h) {
+    jbyte *inputBytes = env->GetByteArrayElements(input, nullptr);
+    Mat src(h, w, CV_8UC4, (uchar *) inputBytes);
+    Mat dst;
+
+    // Flip theo trục ngang (1: horizontal, 0: vertical)
+    flip(src, dst, 1);
+
+    jbyteArray result = env->NewByteArray(dst.total() * dst.elemSize());
+    env->SetByteArrayRegion(result, 0, dst.total() * dst.elemSize(), (jbyte *) dst.data);
+    env->ReleaseByteArrayElements(input, inputBytes, 0);
+    return result;
 }
 
-extern "C"
+JNIEXPORT jbyteArray JNICALL
+Java_com_nhatnguyenba_opencv_NativeLib_nativeFlipVertical(
+        JNIEnv *env,
+        jobject thiz,
+        jbyteArray input,
+        jint w,
+        jint h) {
+    jbyte *inputBytes = env->GetByteArrayElements(input, nullptr);
+    Mat src(h, w, CV_8UC4, (uchar *) inputBytes);
+    Mat dst;
+
+    // Flip theo trục dọc
+    flip(src, dst, 0);
+
+    jbyteArray result = env->NewByteArray(dst.total() * dst.elemSize());
+    env->SetByteArrayRegion(result, 0, dst.total() * dst.elemSize(), (jbyte *) dst.data);
+    env->ReleaseByteArrayElements(input, inputBytes, 0);
+    return result;
+}
+
 JNIEXPORT jbyteArray JNICALL
 Java_com_nhatnguyenba_opencv_NativeLib_nativeBlur(
-        JNIEnv* env, jobject , jbyteArray inputImage,
-        jint width, jint height, jint blurSize) {
-    cv::Mat mat = byteArrayToMat(env, inputImage, width, height);
-    cv::Mat blurred;
-    cv::blur(mat, blurred, cv::Size(blurSize, blurSize));
-    return matToByteArray(env, blurred);
+        JNIEnv *env,
+        jobject thiz,
+        jbyteArray input,
+        jint w,
+        jint h,
+        jint radius) {
+    jbyte *inputBytes = env->GetByteArrayElements(input, nullptr);
+    Mat src(h, w, CV_8UC4, (uchar *) inputBytes);
+    Mat dst;
+
+    // Làm mờ ảnh với Gaussian Blur
+    GaussianBlur(src, dst, Size(2 * radius + 1, 2 * radius + 1), 0);
+
+    jbyteArray result = env->NewByteArray(dst.total() * dst.elemSize());
+    env->SetByteArrayRegion(result, 0, dst.total() * dst.elemSize(), (jbyte *) dst.data);
+    env->ReleaseByteArrayElements(input, inputBytes, 0);
+    return result;
+}
+
 }
