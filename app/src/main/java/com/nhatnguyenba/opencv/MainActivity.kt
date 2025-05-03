@@ -236,7 +236,7 @@ fun ImageProcessorScreen() {
                     Slider(
                         value = blurRadius,
                         onValueChange = { blurRadius = it },
-                        valueRange = 0f..25f,
+                        valueRange = 0f..100f,
                         steps = 24,
                         modifier = Modifier.padding(horizontal = 16.dp)
                     )
